@@ -72,27 +72,8 @@
             background-color: var(--bg-main);
             color: var(--text-primary);
             height: 100vh;
-            overflow: hidden; /* Prevents scrollbars if content overflows slightly */
+            overflow: hidden;
             user-select: none;
-        }
-
-        /* === HEADER (FIXED) === */
-        header {
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            padding: 25px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            z-index: 10;
-            pointer-events: none; /* Allows clicks to pass through empty space */
-        }
-
-        .header-left, .header-right {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            pointer-events: auto; /* Re-enables clicks on widgets */
         }
 
         .widget-card {
@@ -101,14 +82,8 @@
             border-radius: var(--border-radius);
             padding: 15px 20px;
             border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: var(--transition);
         }
-        .weather-widget.widget-card {
-            width: 210px;
-            min-width: 180px;
-            max-width: 240px;
-        }
-
+        
         .weather-widget {
             display: flex;
             align-items: center;
@@ -120,13 +95,33 @@
         .weather-desc { font-size: 0.8rem; color: var(--text-secondary); }
 
         /* Calendar */
+        .calendar-widget {
+            transition: var(--transition);
+        }
+        .calendar-widget.collapsed .calendar-content {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            margin-top: 0;
+        }
+        .calendar-widget.collapsed .calendar-header {
+            margin-bottom: 0;
+        }
+        .calendar-content {
+            max-height: 1000px;
+            opacity: 1;
+            overflow: visible;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.3s ease;
+            margin-top: 0;
+        }
         .calendar-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
-        .calendar-title { font-weight: 500; font-size: 0.95rem; }
+        .calendar-title { font-weight: 500; font-size: 0.95rem; cursor: pointer; user-select: none; }
+        .calendar-title:hover { opacity: 0.8; }
         .calendar-nav { display: flex; gap: 5px; }
         .calendar-nav button {
             background: transparent; border: none; color: var(--text-secondary);
@@ -150,8 +145,11 @@
         .calendar-day.today { color: var(--text-primary); font-weight: 600; background: rgba(99, 102, 241, 0.2); }
         .calendar-day.other-month { opacity: 0.3; pointer-events: none; }
         .calendar-day.has-event::after {
-            content: ''; position: absolute; bottom: 2px; width: 4px; height: 4px;
-            background: var(--accent-color); border-radius: 50%;
+            content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 4px; background: var(--accent-color); border-radius: 50%;
+        }
+        .calendar-day.has-multiple-events::after {
+            width: 14px; border-radius: 2px;
         }
         .calendar-day.selected { box-shadow: inset 0 0 0 1.5px var(--accent-color); }
 
@@ -172,6 +170,24 @@
         }
         .event-panel-header { font-size: 0.9rem; color: var(--text-primary); margin-bottom: 10px; font-weight: 500; }
         .event-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; max-height: 150px; overflow-y: auto; }
+        
+        /* Scrollbar améliorée */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { 
+            background: rgba(99, 102, 241, 0.3); 
+            border-radius: 10px; 
+            transition: background 0.2s;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.5); }
+        ::-webkit-scrollbar-corner { background: transparent; }
+        
+        /* Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(99, 102, 241, 0.3) rgba(255, 255, 255, 0.02);
+        }
+        
         .event-item {
             display: flex; justify-content: space-between; align-items: center; padding: 8px;
             background: rgba(255,255,255,0.05); border-radius: 6px; font-size: 0.8rem;
@@ -193,15 +209,16 @@
         .btn-add-event:hover { background: var(--accent-hover); }
 
         /* Header Right */
-        .header-right { align-items: flex-end; }
-        .clock-widget { text-align: right; }
+        .clock-widget { 
+            text-align: right; 
+        }
         .clock-time { font-size: 2.2rem; font-weight: 300; line-height: 1; letter-spacing: -1px; }
         .clock-date { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
         .hamburger-btn {
             background: var(--surface-color); border: 1px solid rgba(255,255,255,0.05);
             color: var(--text-secondary); width: 42px; height: 42px; border-radius: 12px;
             cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
-            transition: var(--transition); margin-top: 10px;
+            transition: var(--transition);
         }
         .hamburger-btn:hover { background: var(--surface-hover); color: var(--text-primary); }
 
@@ -253,11 +270,13 @@
         .search-form:focus-within { box-shadow: 0 10px 50px rgba(99, 102, 241, 0.3); background: var(--surface-hover); }
 
         .engine-selector {
-            display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer;
-            border-radius: 12px; transition: var(--transition); margin-right: 12px;
-            border-right: 1px solid rgba(255,255,255,0.05); position: relative;
+            display: flex; align-items: center; gap: 8px; padding: 12px; cursor: pointer;
+            border-radius: 20px; transition: var(--transition); margin-right: 4px; margin-left: -9px;
+            position: relative;
         }
         .engine-selector:hover { background: rgba(255,255,255,0.05); }
+        
+        .engine-icon { filter: brightness(0) invert(1); }
         
         .engine-dropdown {
             position: absolute; top: 120%; left: 0; background: var(--bg-main);
@@ -302,9 +321,70 @@
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content {
             background: var(--surface-color); border-radius: var(--border-radius); padding: 30px;
-            max-width: 450px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 900px; width: 90%; max-height: 85vh; overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(255,255,255,0.05);
             transform: scale(0.9) translateY(20px); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* Version colonnes */
+        .modal-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .modal-column {
+            min-width: 0;
+        }
+        .modal-column-title {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        @media (max-width: 768px) {
+            .modal-columns {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+        
+        /* Onglets dans la colonne droite */
+        .column-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .column-tab {
+            flex: 1;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: var(--transition);
+            text-align: center;
+        }
+        .column-tab:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+        }
+        .column-tab.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        .column-tab-content {
+            display: none;
+        }
+        .column-tab-content.active {
+            display: block;
         }
         .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
         
@@ -358,21 +438,33 @@
 
         /* Responsive */
         @media (max-width: 900px) {
-            header { flex-direction: column; align-items: center; gap: 15px; position: relative; height: auto; padding: 20px; pointer-events: auto; }
-            .header-left, .header-right { width: 100%; align-items: center; }
-            .widget-card { width: 100%; max-width: 400px; }
-            main { height: auto; margin-top: 20px; justify-content: flex-start; padding-top: 20px; position: relative; }
-            /* Note: On mobile, the "fixed center" requirement is relaxed to allow scrolling if needed */
+            header {
+                position: static !important;
+                flex-direction: column;
+                align-items: center;
+                padding: 20px;
+            }
+            header > div {
+                align-items: center !important;
+            }
+            main { 
+                height: auto; 
+                margin-top: 20px; 
+                justify-content: flex-start; 
+                padding-top: 20px; 
+                position: relative; 
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- HEADER (Fixed Position) -->
-    <header>
-        <div class="header-left">
+    <!-- Header with widgets -->
+    <header style="position: fixed; top: 0; left: 0; right: 0; display: flex; justify-content: space-between; padding: 25px 40px; pointer-events: none; z-index: 10;">
+        <!-- Left side widgets -->
+        <div style="display: flex; flex-direction: column; gap: 20px; pointer-events: auto;">
             <!-- Weather -->
-            <div class="widget-card weather-widget">
+            <div class="widget-card weather-widget" id="weatherWidget">
                 <i class="weather-icon fas fa-cloud"></i>
                 <div class="weather-info">
                     <div class="weather-temp">--°C</div>
@@ -381,7 +473,7 @@
             </div>
 
             <!-- Calendar -->
-            <div class="widget-card" id="calendarWidget">
+            <div class="widget-card calendar-widget" id="calendarWidget">
                 <div class="calendar-header">
                     <span class="calendar-title" id="calendarTitle">Mois Année</span>
                     <div class="calendar-nav">
@@ -389,32 +481,36 @@
                         <button id="calNext"><i class="fas fa-chevron-right"></i></button>
                     </div>
                 </div>
-                <div class="calendar-grid" id="calendarGrid"></div>
-                
-                <!-- Event Panel (Integrated) -->
-                <div class="event-panel" id="eventPanel">
-                    <div class="event-panel-header" id="eventPanelTitle">Événements</div>
-                    <div class="event-list" id="eventList"></div>
-                    <input type="text" class="widget-input" id="newEventTitle" placeholder="Titre de l'événement">
-                    <div style="display:flex; gap:8px; margin-bottom:8px;">
-                        <input type="time" class="widget-input" style="margin-bottom:0; flex:1;" id="newEventTime">
-                        <input type="text" class="widget-input" style="margin-bottom:0; flex:2;" id="newEventDesc" placeholder="Description">
+                <div class="calendar-content">
+                    <div class="calendar-grid" id="calendarGrid"></div>
+                    
+                    <!-- Event Panel (Integrated) -->
+                    <div class="event-panel" id="eventPanel">
+                        <div class="event-panel-header" id="eventPanelTitle">Événements</div>
+                        <div class="event-list" id="eventList"></div>
+                        <input type="text" class="widget-input" id="newEventTitle" placeholder="Titre de l'événement">
+                        <div style="display:flex; gap:8px; margin-bottom:8px;">
+                            <input type="time" class="widget-input" style="margin-bottom:0; flex:1;" id="newEventTime">
+                            <input type="text" class="widget-input" style="margin-bottom:0; flex:2;" id="newEventDesc" placeholder="Description">
+                        </div>
+                        <button class="btn-add-event" id="saveEventBtn"><i class="fas fa-plus"></i> Ajouter</button>
                     </div>
-                    <button class="btn-add-event" id="saveEventBtn"><i class="fas fa-plus"></i> Ajouter</button>
                 </div>
             </div>
         </div>
 
-        <div class="header-right">
-            <div style="display: flex; align-items: flex-start; gap: 12px;">
-                <div class="clock-widget">
-                    <div class="clock-time" id="clockTime">00:00</div>
-                    <div class="clock-date" id="clockDate">...</div>
-                </div>
-                <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu" style="margin-left:8px; align-self: flex-start;">
-                    <i class="fas fa-cog"></i>
-                </button>
+        <!-- Right side widgets -->
+        <div style="display: flex; flex-direction: column; gap: 20px; align-items: flex-end; pointer-events: auto;">
+            <!-- Clock -->
+            <div class="clock-widget" id="clockWidget">
+                <div class="clock-time" id="clockTime">00:00</div>
+                <div class="clock-date" id="clockDate">...</div>
             </div>
+            
+            <!-- Settings Button -->
+            <button class="hamburger-btn" id="hamburgerBtn" aria-label="Menu">
+                <i class="fas fa-cog"></i>
+            </button>
         </div>
     </header>
 
@@ -434,17 +530,7 @@
                     <span class="engine-name" style="font-size:0.9rem; font-weight:500; color:var(--text-secondary)">Google</span>
                     <i class="engine-arrow fas fa-chevron-down" style="font-size:0.7rem; margin-left:5px; color:var(--text-secondary)"></i>
                     
-                    <div class="engine-dropdown" id="engineDropdown">
-                        <div class="engine-option" data-url="https://www.google.com/search?q=" data-icon="fab fa-google">
-                            <i class="fab fa-google"></i> <span>Google</span>
-                        </div>
-                        <div class="engine-option" data-url="https://www.bing.com/search?q=" data-icon="fab fa-microsoft">
-                            <i class="fab fa-microsoft"></i> <span>Bing</span>
-                        </div>
-                        <div class="engine-option" data-url="https://search.brave.com/search?q=" data-icon="fas fa-shield-halved">
-                            <i class="fas fa-shield-halved"></i> <span>Brave</span>
-                        </div>
-                    </div>
+                    <div class="engine-dropdown" id="engineDropdown"></div>
                 </div>
                 
                 <input type="text" class="search-input" placeholder="Rechercher sur le web..." id="searchInput" autocomplete="off">
@@ -465,18 +551,56 @@
                 <button class="modal-close" data-target="modalSettings"><i class="fas fa-times"></i></button>
             </div>
             
-            <label style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Texte d'accueil (ex: Bonjour, Hello)</label>
-            <input type="text" class="modal-input" id="greetingInput" placeholder="Laisser vide pour automatique">
-            
-            <label style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Votre prénom</label>
-            <input type="text" class="modal-input" id="nameInput" placeholder="Ex: Dune">
-            <button class="btn-primary" id="saveNameBtn" style="margin-bottom:20px;">Sauvegarder le profil</button>
-            
-            <div style="border-top:1px solid rgba(255,255,255,0.1); margin:20px 0; padding-top:5px;"></div>
-            
-            <label style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:10px;">Liens rapides</label>
-            <div class="links-list" id="linksListManager"></div>
-            <button class="btn-secondary" id="addLinkBtn"><i class="fas fa-plus"></i> Ajouter un lien</button>
+            <div class="modal-columns">
+                <!-- Colonne gauche : Profil -->
+                <div class="modal-column">
+                    <div class="modal-column-title">Profil</div>
+                    
+                    <label style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Texte d'accueil</label>
+                    <input type="text" class="modal-input" id="greetingInput" placeholder="Laisser vide pour automatique">
+                    
+                    <label style="font-size:0.85rem; color:var(--text-secondary); display:block; margin-bottom:5px;">Votre prénom</label>
+                    <input type="text" class="modal-input" id="nameInput" placeholder="Ex: Dune">
+                    <button class="btn-primary" id="saveNameBtn">Sauvegarder le profil</button>
+                </div>
+                
+                <!-- Colonne droite : Moteurs & Liens avec onglets -->
+                <div class="modal-column">
+                    <div class="column-tabs">
+                        <button class="column-tab active" data-column-tab="engines">
+                            <i class="fas fa-search"></i> Moteurs
+                        </button>
+                        <button class="column-tab" data-column-tab="links">
+                            <i class="fas fa-link"></i> Liens
+                        </button>
+                    </div>
+                    
+                    <!-- Contenu onglet Moteurs -->
+                    <div class="column-tab-content active" id="column-tab-engines">
+                        <div class="links-list" id="enginesListManager"></div>
+                        <button class="btn-secondary" id="addEngineBtn"><i class="fas fa-plus"></i> Ajouter un moteur</button>
+                    </div>
+                    
+                    <!-- Contenu onglet Liens -->
+                    <div class="column-tab-content" id="column-tab-links">
+                        <div class="links-list" id="linksListManager"></div>
+                        <button class="btn-secondary" id="addLinkBtn"><i class="fas fa-plus"></i> Ajouter un lien</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalEngineForm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="engineFormTitle">Ajouter un moteur</h3>
+                <button class="modal-close" data-target="modalEngineForm"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="text" class="modal-input" id="engineNameInput" placeholder="Nom (ex: DuckDuckGo)">
+            <input type="text" class="modal-input" id="engineUrlInput" placeholder="URL de recherche (ex: https://duckduckgo.com/?q=)">
+            <input type="text" class="modal-input" id="engineIconInput" placeholder="URL du site (ex: https://duckduckgo.com)">
+            <button class="btn-primary" id="saveEngineBtn">Sauvegarder</button>
         </div>
     </div>
 
@@ -498,11 +622,18 @@
         // All variables initialized from LocalStorage immediately
         let currentEngine = localStorage.getItem('currentEngine') || 'https://www.google.com/search?q=';
         
+        const defaultEngines = [
+            { name: 'Google', url: 'https://www.google.com/search?q=', siteUrl: 'https://www.google.com' },
+            { name: 'Bing', url: 'https://www.bing.com/search?q=', siteUrl: 'https://www.bing.com' },
+            { name: 'Brave', url: 'https://search.brave.com/search?q=', siteUrl: 'https://search.brave.com' }
+        ];
+        let myEngines = JSON.parse(localStorage.getItem('myEngines')) || defaultEngines;
+        
         const defaultLinks = [
-            { id: 1, name: 'Mail', url: 'https://gmail.com', icon: 'fas fa-envelope' },
-            { id: 2, name: 'GitHub', url: 'https://github.com', icon: 'fab fa-github' },
-            { id: 3, name: 'Reddit', url: 'https://reddit.com', icon: 'fab fa-reddit' },
-            { id: 4, name: 'Twitter', url: 'https://twitter.com', icon: 'fab fa-twitter' }
+            { id: 1, name: 'Mail', url: 'https://gmail.com' },
+            { id: 2, name: 'GitHub', url: 'https://github.com' },
+            { id: 3, name: 'Reddit', url: 'https://reddit.com' },
+            { id: 4, name: 'Twitter', url: 'https://twitter.com' }
         ];
         let myLinks = JSON.parse(localStorage.getItem('myLinks')) || defaultLinks;
         
@@ -512,6 +643,7 @@
         let currentDate = new Date();
         let selectedDateKey = null;
         let editingLinkId = null;
+        let editingEngineId = null;
 
         // === DOM ELEMENTS ===
         const $ = id => document.getElementById(id);
@@ -526,10 +658,11 @@
             calendarGrid: $('calendarGrid'), calendarTitle: $('calendarTitle'),
             eventPanel: $('eventPanel'), eventList: $('eventList'), eventPanelTitle: $('eventPanelTitle'),
             newEventTitle: $('newEventTitle'), newEventTime: $('newEventTime'), newEventDesc: $('newEventDesc'),
-            modalSettings: $('modalSettings'), modalLinkForm: $('modalLinkForm'),
+            modalSettings: $('modalSettings'), modalLinkForm: $('modalLinkForm'), modalEngineForm: $('modalEngineForm'),
             nameInput: $('nameInput'), greetingInput: $('greetingInput'),
-            linksListManager: $('linksListManager'),
+            linksListManager: $('linksListManager'), enginesListManager: $('enginesListManager'),
             linkNameInput: $('linkNameInput'), linkUrlInput: $('linkUrlInput'), linkIconInput: $('linkIconInput'),
+            engineNameInput: $('engineNameInput'), engineUrlInput: $('engineUrlInput'), engineIconInput: $('engineIconInput'),
         };
 
         // === UTILITIES ===
@@ -559,9 +692,18 @@
                 els.greetingPrefix.textContent = `${customGreeting}, `;
             } else {
                 const h = now.getHours();
-                let greet = 'Bonsoir';
-                if (h >= 5 && h < 12) greet = 'Bonjour';
-                else if (h >= 12 && h < 18) greet = 'Bon après-midi';
+                const morningGreetings = ['Bonjour', 'Salut', 'Hey', 'Hello', 'Coucou'];
+                const afternoonGreetings = ['Bon après-midi', 'Salut', 'Hello', 'Hey'];
+                const eveningGreetings = ['Bonsoir', 'Salut', 'Hey', 'Re'];
+                
+                let greetings;
+                if (h >= 5 && h < 12) greetings = morningGreetings;
+                else if (h >= 12 && h < 18) greetings = afternoonGreetings;
+                else greetings = eveningGreetings;
+                
+                // Use date as seed for consistent daily greeting
+                const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+                const greet = greetings[dayOfYear % greetings.length];
                 els.greetingPrefix.textContent = `${greet}, `;
             }
         }
@@ -642,11 +784,13 @@
                 const thisDate = new Date(year, month, i);
                 const key = formatDateKey(thisDate);
                 const isToday = i === today.getDate() && month === today.getMonth() && year === today.getFullYear();
-                const hasEvent = myEvents[key] && myEvents[key].length > 0;
+                const eventCount = myEvents[key] ? myEvents[key].length : 0;
+                const hasEvent = eventCount > 0;
+                const hasMultipleEvents = eventCount > 1;
                 const isSelected = key === selectedDateKey;
                 
                 els.calendarGrid.innerHTML += `
-                    <div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''} ${isSelected ? 'selected' : ''}" data-date="${key}">
+                    <div class="calendar-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''} ${hasMultipleEvents ? 'has-multiple-events' : ''} ${isSelected ? 'selected' : ''}" data-date="${key}">
                         ${i}
                     </div>
                 `;
@@ -690,6 +834,11 @@
         $('calNext').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth()+1); renderCalendar(); });
         $('calPrev').addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth()-1); renderCalendar(); });
         
+        // Toggle calendar collapse
+        els.calendarTitle.addEventListener('click', () => {
+            $('calendarWidget').classList.toggle('collapsed');
+        });
+        
         els.calendarGrid.addEventListener('click', e => {
             if(e.target.classList.contains('calendar-day') && e.target.dataset.date) {
                 const key = e.target.dataset.date;
@@ -724,6 +873,7 @@
         });
         
         window.deleteEvent = idx => {
+            if (!confirm('Voulez-vous vraiment supprimer cet événement ?')) return;
             myEvents[selectedDateKey].splice(idx, 1);
             if(myEvents[selectedDateKey].length === 0) delete myEvents[selectedDateKey];
             localStorage.setItem('myEvents', JSON.stringify(myEvents));
@@ -732,32 +882,155 @@
         };
 
         // === SEARCH ===
-        // Load saved engine
-        const savedIcon = localStorage.getItem('currentEngineIcon');
-        const savedName = localStorage.getItem('currentEngineName');
-        if (savedIcon && savedName) {
-            els.engineIconDisplay.className = `engine-icon ${savedIcon}`;
-            els.engineNameDisplay.textContent = savedName;
+        // Cache pour les logos SVGL
+        const svglCache = {};
+        
+        async function getSvglLogo(siteName) {
+            // Vérifier le cache
+            if (svglCache[siteName] !== undefined) {
+                return svglCache[siteName];
+            }
+            
+            try {
+                // Rechercher le logo par nom sur SVGL
+                const response = await fetch(`https://api.svgl.app?search=${encodeURIComponent(siteName)}`);
+                if (!response.ok) throw new Error('SVGL API error');
+                
+                const results = await response.json();
+                if (results && results.length > 0) {
+                    // Trouver la correspondance exacte (insensible à la casse)
+                    let logo = results.find(r => r.title.toLowerCase() === siteName.toLowerCase());
+                    
+                    // Si pas de match exact, prendre le premier résultat
+                    if (!logo) logo = results[0];
+                    
+                    // Si c'est un objet avec dark/light, prendre la version dark pour les thèmes sombres
+                    const svgUrl = typeof logo.route === 'string' ? logo.route : logo.route.dark || logo.route.light;
+                    svglCache[siteName] = svgUrl;
+                    return svgUrl;
+                }
+            } catch (error) {
+                console.log('SVGL not found for:', siteName);
+            }
+            
+            svglCache[siteName] = null;
+            return null;
         }
+        
+        function getFaviconUrl(siteUrl) {
+            try {
+                const url = new URL(siteUrl);
+                // Fallback vers DuckDuckGo puis Google
+                return `https://icons.duckduckgo.com/ip3/${url.hostname}.ico`;
+            } catch {
+                return null;
+            }
+        }
+        
+        // Fonction pour créer une image favicon/logo avec fallback en cascade
+        async function createLogoImg(siteUrl, siteName, size = 18) {
+            // 1. Essayer SVGL d'abord (meilleure qualité SVG)
+            const svglUrl = await getSvglLogo(siteName);
+            
+            if (svglUrl) {
+                return `<img src="${svglUrl}" 
+                            width="${size}" height="${size}" 
+                            onerror="this.style.display='none'; this.nextElementSibling?.style.removeProperty('display');">
+                        <img src="${getFaviconUrl(siteUrl)}" 
+                            width="${size}" height="${size}" 
+                            style="display: none;" 
+                            onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=${new URL(siteUrl).hostname}&sz=${size * 2}';">`;
+            }
+            
+            // 2. Sinon utiliser favicon avec fallback
+            const url = new URL(siteUrl);
+            const fallbackUrl = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=${size * 2}`;
+            
+            return `<img src="${getFaviconUrl(siteUrl)}" 
+                        onerror="this.onerror=null; this.src='${fallbackUrl}';" 
+                        width="${size}" height="${size}">`;
+        }
+        
+        // Version synchrone pour compatibilité (utilise le cache si disponible)
+        function createFaviconImg(siteUrl, size = 18) {
+            const url = new URL(siteUrl);
+            const fallbackUrl = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=${size * 2}`;
+            
+            return `<img src="${getFaviconUrl(siteUrl)}" 
+                        onerror="this.onerror=null; this.src='${fallbackUrl}';" 
+                        width="${size}" height="${size}">`;
+        }
+        
+        async function renderEngineDropdown() {
+            els.engineDropdown.innerHTML = '';
+            
+            for (const engine of myEngines) {
+                const opt = document.createElement('div');
+                opt.className = 'engine-option';
+                opt.dataset.url = engine.url;
+                opt.dataset.icon = engine.icon || '';
+                opt.dataset.siteUrl = engine.siteUrl || '';
+                opt.dataset.name = engine.name;
+                
+                // Utiliser SVGL puis favicon si siteUrl existe, sinon icône FontAwesome
+                if (engine.siteUrl) {
+                    const logoHtml = await createLogoImg(engine.siteUrl, engine.name, 18);
+                    opt.innerHTML = `${logoHtml} <span>${engine.name}</span>`;
+                } else if (engine.icon) {
+                    opt.innerHTML = `<i class="${engine.icon}"></i> <span>${engine.name}</span>`;
+                } else {
+                    opt.innerHTML = `<i class="fas fa-search"></i> <span>${engine.name}</span>`;
+                }
+                
+                opt.addEventListener('click', e => {
+                    e.stopPropagation();
+                    currentEngine = engine.url;
+                    localStorage.setItem('currentEngine', currentEngine);
+                    localStorage.setItem('currentEngineIcon', engine.icon || '');
+                    localStorage.setItem('currentEngineName', engine.name);
+                    localStorage.setItem('currentEngineSiteUrl', engine.siteUrl || '');
+                    updateEngineDisplay();
+                    els.engineDropdown.classList.remove('active');
+                });
+                
+                els.engineDropdown.appendChild(opt);
+            }
+        }
+        
+        async function updateEngineDisplay() {
+            const savedIcon = localStorage.getItem('currentEngineIcon');
+            const savedName = localStorage.getItem('currentEngineName');
+            const savedSiteUrl = localStorage.getItem('currentEngineSiteUrl');
+            
+            if (savedName) {
+                els.engineNameDisplay.textContent = savedName;
+                
+                // Priorité au SVGL puis favicon si siteUrl existe
+                if (savedSiteUrl) {
+                    const iconEl = document.querySelector('.engine-icon');
+                    if (iconEl) {
+                        const logoHtml = await createLogoImg(savedSiteUrl, savedName, 18);
+                        iconEl.outerHTML = logoHtml.replace('<img', '<img class="engine-icon"');
+                    }
+                } else if (savedIcon) {
+                    const iconEl = document.querySelector('.engine-icon');
+                    if (iconEl && iconEl.tagName === 'IMG') {
+                        iconEl.outerHTML = `<i class="engine-icon ${savedIcon}"></i>`;
+                    } else if (iconEl) {
+                        iconEl.className = `engine-icon ${savedIcon}`;
+                    }
+                }
+            }
+        }
+        
+        renderEngineDropdown();
+        updateEngineDisplay();
 
         els.engineSelector.addEventListener('click', e => {
             e.stopPropagation();
             els.engineDropdown.classList.toggle('active');
         });
         document.addEventListener('click', () => els.engineDropdown.classList.remove('active'));
-
-        document.querySelectorAll('.engine-option').forEach(opt => {
-            opt.addEventListener('click', e => {
-                e.stopPropagation();
-                currentEngine = opt.dataset.url;
-                localStorage.setItem('currentEngine', currentEngine);
-                localStorage.setItem('currentEngineIcon', opt.dataset.icon);
-                localStorage.setItem('currentEngineName', opt.querySelector('span').textContent);
-                els.engineIconDisplay.className = `engine-icon ${opt.dataset.icon}`;
-                els.engineNameDisplay.textContent = opt.querySelector('span').textContent;
-                els.engineDropdown.classList.remove('active');
-            });
-        });
 
         els.searchForm.addEventListener('submit', e => {
             e.preventDefault();
@@ -766,32 +1039,58 @@
         });
 
         // === LINKS ===
-        function renderQuickLinks() {
+        async function renderQuickLinks() {
             els.quickLinks.innerHTML = '';
-            myLinks.forEach((link, i) => {
+            
+            for (let i = 0; i < myLinks.length; i++) {
+                const link = myLinks[i];
                 const a = document.createElement('a');
                 a.href = link.url; a.className = 'quick-link'; a.target = '_blank';
                 a.style.animationDelay = `${i * 0.1}s`;
-                a.innerHTML = `<div class="link-icon"><i class="${link.icon}"></i></div><span class="link-name">${link.name}</span>`;
+                
+                // Utiliser SVGL puis favicon si URL fournie, sinon icône FontAwesome
+                let iconHtml = '';
+                if (link.url && !link.icon) {
+                    iconHtml = await createLogoImg(link.url, link.name, 24);
+                } else if (link.icon) {
+                    iconHtml = `<i class="${link.icon}"></i>`;
+                } else {
+                    iconHtml = `<i class="fas fa-link"></i>`;
+                }
+                
+                a.innerHTML = `<div class="link-icon">${iconHtml}</div><span class="link-name">${link.name}</span>`;
                 els.quickLinks.appendChild(a);
-            });
+            }
             localStorage.setItem('myLinks', JSON.stringify(myLinks));
         }
 
-        function renderLinksManager() {
+        async function renderLinksManager() {
             els.linksListManager.innerHTML = '';
-            myLinks.forEach((link, index) => {
+            
+            for (let index = 0; index < myLinks.length; index++) {
+                const link = myLinks[index];
                 const div = document.createElement('div');
                 div.className = 'link-item-manager';
+                
+                // Utiliser SVGL puis favicon si URL fournie, sinon icône FontAwesome
+                let iconHtml = '';
+                if (link.url && !link.icon) {
+                    iconHtml = await createLogoImg(link.url, link.name, 18);
+                } else if (link.icon) {
+                    iconHtml = `<i class="${link.icon}"></i>`;
+                } else {
+                    iconHtml = `<i class="fas fa-link"></i>`;
+                }
+                
                 div.innerHTML = `
-                    <div class="link-info"><i class="${link.icon}"></i><span>${link.name}</span></div>
+                    <div class="link-info">${iconHtml}<span>${link.name}</span></div>
                     <div class="link-actions">
                         <button class="action-btn" onclick="editLink(${index})"><i class="fas fa-pen"></i></button>
                         <button class="action-btn delete" onclick="deleteLink(${index})"><i class="fas fa-trash"></i></button>
                     </div>
                 `;
                 els.linksListManager.appendChild(div);
-            });
+            }
         }
 
         window.deleteLink = index => {
@@ -813,17 +1112,97 @@
         };
 
         // === SETTINGS ===
+        async function renderEnginesManager() {
+            els.enginesListManager.innerHTML = '';
+            
+            for (let index = 0; index < myEngines.length; index++) {
+                const engine = myEngines[index];
+                const div = document.createElement('div');
+                div.className = 'link-item-manager';
+                
+                let iconHtml = '';
+                // Utiliser SVGL puis favicon si siteUrl existe
+                if (engine.siteUrl) {
+                    iconHtml = await createLogoImg(engine.siteUrl, engine.name, 18);
+                } else if (engine.icon) {
+                    iconHtml = `<i class="${engine.icon}"></i>`;
+                } else {
+                    iconHtml = `<i class="fas fa-search"></i>`;
+                }
+                
+                div.innerHTML = `
+                    <div class="link-info">${iconHtml}<span>${engine.name}</span></div>
+                    <div class="link-actions">
+                        <button class="action-btn" onclick="editEngine(${index})"><i class="fas fa-pen"></i></button>
+                        <button class="action-btn delete" onclick="deleteEngine(${index})"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                els.enginesListManager.appendChild(div);
+            }
+        }
+        
+        window.deleteEngine = index => {
+            if(confirm('Supprimer ce moteur de recherche ?')) {
+                myEngines.splice(index, 1);
+                localStorage.setItem('myEngines', JSON.stringify(myEngines));
+                renderEngineDropdown();
+                renderEnginesManager();
+            }
+        };
+
+        window.editEngine = index => {
+            const engine = myEngines[index];
+            editingEngineId = index;
+            $('engineFormTitle').textContent = "Modifier le moteur";
+            els.engineNameInput.value = engine.name;
+            els.engineUrlInput.value = engine.url;
+            els.engineIconInput.value = engine.siteUrl || '';
+            closeModal('modalSettings');
+            openModal('modalEngineForm');
+        };
+        
         els.userNameDisplay.addEventListener('click', () => { 
             els.nameInput.value = localStorage.getItem('userName') || '';
             els.greetingInput.value = localStorage.getItem('customGreeting') || '';
-            renderLinksManager(); 
+            renderLinksManager();
+            renderEnginesManager();
             openModal('modalSettings'); 
         });
         $('hamburgerBtn').addEventListener('click', () => { 
             els.nameInput.value = localStorage.getItem('userName') || '';
             els.greetingInput.value = localStorage.getItem('customGreeting') || '';
-            renderLinksManager(); 
+            renderLinksManager();
+            renderEnginesManager();
             openModal('modalSettings'); 
+        });
+        
+        $('addEngineBtn').addEventListener('click', () => {
+            editingEngineId = null;
+            $('engineFormTitle').textContent = "Ajouter un moteur";
+            els.engineNameInput.value = ''; 
+            els.engineUrlInput.value = ''; 
+            els.engineIconInput.value = '';
+            closeModal('modalSettings'); 
+            openModal('modalEngineForm');
+        });
+        
+        $('saveEngineBtn').addEventListener('click', () => {
+            const newEngine = {
+                name: els.engineNameInput.value.trim() || 'Moteur',
+                url: els.engineUrlInput.value.trim() || 'https://www.google.com/search?q=',
+                siteUrl: els.engineIconInput.value.trim() || '',
+                icon: '' // We use favicon instead
+            };
+            if (editingEngineId !== null) {
+                myEngines[editingEngineId] = newEngine;
+            } else {
+                myEngines.push(newEngine);
+            }
+            localStorage.setItem('myEngines', JSON.stringify(myEngines));
+            renderEngineDropdown();
+            closeModal('modalEngineForm');
+            renderEnginesManager();
+            openModal('modalSettings');
         });
         
         $('addLinkBtn').addEventListener('click', () => {
@@ -865,6 +1244,21 @@
         });
         document.querySelectorAll('.modal-overlay').forEach(ov => {
             ov.addEventListener('click', e => { if(e.target === ov) closeModal(ov.id); });
+        });
+
+        // Gestion des onglets dans la colonne droite
+        document.querySelectorAll('.column-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.columnTab;
+                
+                // Désactiver tous les onglets et contenus
+                document.querySelectorAll('.column-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.column-tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Activer l'onglet et contenu sélectionné
+                tab.classList.add('active');
+                document.getElementById(`column-tab-${target}`).classList.add('active');
+            });
         });
 
         // Init
